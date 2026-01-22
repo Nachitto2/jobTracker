@@ -6,12 +6,27 @@ with sync_playwright() as playwright:
     url = "https://ar.computrabajo.com/"
     page.goto(url)
     page.fill("#prof-cat-search-input","QA tester")
-    page.click("#search-button")
+    page.keyboard.press("Enter")
+    page.wait_for_selector(".js-o-link")
     
     trabajos = page.locator(".js-o-link")
+    empresas = page.locator(".fc_base.t_ellipsis")
+    sueldos = page.locator(".dIB mr10")
+
+    cantidadTrabajos = trabajos.count()
+
+    print(f"Se encontraron {cantidadTrabajos} ofertas")
 
     for i in range(5):
-        print(trabajos.nth(i).inner_text())
+        try:
+            titulo = trabajos.nth(i).inner_text()
+            empresa = empresas.nth(i).inner_text()
+            sueldo = sueldos.nth(i).inner_text()
+            print(f"{titulo},{empresa},{sueldo}")
+            
+
+        except Exception as e:
+            print("Error en el elemento {i}:{e}")
     
     browser.close()
   
