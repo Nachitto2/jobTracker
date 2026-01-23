@@ -2,71 +2,62 @@ from playwright.sync_api import sync_playwright
 import re
 import csv
 
-def setupBrowser():
-    browser = playwright.firefox.launch(headless=False, slow_mo=300)
+def setupBrowser(p):
+    browser = p.firefox.launch(headless=False, slow_mo=300)
     page = browser.new_page()
     return browser, page
 
-with sync_playwright() as playwright:
-    
-    browser, page = setupBrowser()
+def buscarOfertas(page):
     url = "https://ar.computrabajo.com/"
     page.goto(url)
     page.fill("#prof-cat-search-input","tester")
     page.keyboard.press("Enter")
     page.wait_for_selector("article.box_offer")
-    
-    tarjetas = page.locator("article.box_offer")
-    cantidadOfertas = tarjetas.count()
 
-    print(f"Se encontraron {cantidadOfertas} ofertas de trabajo")
+def procesarTarjeta(tarjeta,i):
+    try:
+        titulo = tarjeta.locator(".js-o-link").inner_text()
+        empresa = tarjeta.locator(".fc_base.t_ellipsis").inner_text()
 
-    for i in range(cantidadOfertas):
-        tarjetaActual = tarjetas.nth(i)
-        try:
-            titulo = tarjetaActual.locator(".js-o-link").inner_text()
-            empresa = tarjetaActual.locator(".fc_base.t_ellipsis").inner_text()
+        tarjetaTexto = tarjeta.inner_text()
 
-            tarjetaTexto = tarjetaActual.inner_text()
+        #Patron regex, agarra numeros, . y , que vengan despues del signo $
+        patron = r"\$[\d\., ]+"
 
-            #Patron regex, agarra numeros, . y , que vengan despues del signo $
-            patron = r"\$[\d\., ]+"
+        resultado = re.search(patron,tarjetaTexto)
 
-            resultado = re.search(patron,tarjetaTexto)
+        if resultado:
+            sueldo = resultado.group(0).strip()
+        else:
+            sueldo = "No especificado"
+        return {
+            "titulo": titulo,
+            "empresa": empresa,
+            "sueldo": sueldo
+        }
+    except Exception as e:
+        print(f"Error en el elemento {i}:{e}")
+        return None
+        
+def main():
+    with sync_playwright() as p:
+        
+        browser, page = setupBrowser(p)
 
-            if resultado:
-                sueldo = resultado.group(0).strip()
-            else:
-                sueldo = "No especificado"
-            
-            
+        buscarOfertas(page)
 
-            print(f"{titulo},{empresa},{sueldo}")
-        except Exception as e:
-            print(f"Error en el elemento {i}:{e}")
+        
+        tarjetas = page.locator("article.box_offer")
+        cantidadOfertas = tarjetas.count()
 
+        print(f"Se encontraron {cantidadOfertas} ofertas de trabajo")
 
-"""
-    trabajos = page.locator(".js-o-link")
-    empresas = page.locator(".fc_base.t_ellipsis")
-    sueldos = page.locator(".dIB.mr10")
+        for i in range(cantidadOfertas):
+            tarjetaActual = tarjetas.nth(i)
+            datos = procesarTarjeta(tarjetaActual,i)
 
-    cantidadTrabajos = trabajos.count()
+            print(datos)
+        page.pause()
 
-    print(f"Se encontraron {cantidadTrabajos} ofertas")
-
-    for i in range(cantidadTrabajos):
-        try:
-            titulo = trabajos.nth(i).inner_text()
-            empresa = empresas.nth(i).inner_text()
-            sueldo = sueldos.nth(i).inner_text()
-            print(f"{titulo},{empresa},{sueldo}")
-            
-
-        except Exception as e:
-            print("Error en el elemento {i}:{e}")
-    
-    browser.close()
-  
-
-"""
+if __name__=="__main__":
+    main()
