@@ -8,4 +8,8 @@ El proyecto va a estar separado en distintas fases o versiones.
 
 El programa abre firefox, busca QA tester y trae los titulos de las primeras ofertas que aparecen en la web.
 
+## segunda version
+
+Ahora no solo trae los titulos, tambien trae la empresa y el sueldo que ofrece. Tambien hay manejo de errores y se corrigió un problema de tiempos relacionado a playwright.
+
 
