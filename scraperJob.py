@@ -1,9 +1,15 @@
 from playwright.sync_api import sync_playwright
 import re
+import csv
 
-with sync_playwright() as playwright:
+def setupBrowser():
     browser = playwright.firefox.launch(headless=False, slow_mo=300)
     page = browser.new_page()
+    return browser, page
+
+with sync_playwright() as playwright:
+    
+    browser, page = setupBrowser()
     url = "https://ar.computrabajo.com/"
     page.goto(url)
     page.fill("#prof-cat-search-input","tester")
